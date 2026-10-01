@@ -1,0 +1,272 @@
+# Surface Pro 11 árfigyelő – mit figyelünk és honnan.
+# A levelezés és az ütemezés a compose.yaml environment: részében van.
+
+product:
+  name: "Microsoft Surface Pro 11 (Intel) – Core Ultra 5 236V / 16 GB / 256 GB"
+
+  # Gyártói cikkszámok. Ha egy ajánlat címében/adataiban szerepel, az ajánlat elfogadott
+  # (a kizáró szabályok akkor is érvényesek).
+  #   EP2-20112 platina, EP2-20095 fekete  – DE/AT/CH (EOC1 régió)
+  #   EP2-20849 platina, EP2-20845 fekete  – HU/CZ/RO (EOC2 régió, "adapter nélkül")
+  #   EP2-20111 / EP2-20094               – USA (szürkeimport)
+  mpns: [EP2-20112, EP2-20095, EP2-20849, EP2-20845, EP2-20111, EP2-20094,
+         "0196388444892", "0196388444731", "196388444892", "196388444731"]
+
+  # Cím alapú illesztés (ha nincs cikkszám): MINDEGYIK regexnek illeszkednie kell.
+  must_match:
+    - 'surface\s*-?\s*pro'
+    - '(core\s*)?ultra\s*-?\s*5\b|\b236\s*V\b|\bV236\b|\bCU5\b|\bU5\b|ultra5\b'
+    - '\b16\s*(GB|G)\b'
+    - '\b256\s*(GB|G)\b'
+
+  # Kizárás: BÁRMELYIK illeszkedése kizárja az ajánlatot (cikkszám-egyezés esetén is).
+  must_not_match:
+    - 'snapdragon|\bx\s*plus\b|\bx\s*elite\b|\bx1[pe]-|\bZ[A-Z]{2}-\d{5}\b|\bARM\b'
+    - 'ultra\s*-?\s*7\b|ultra\s*-?\s*9\b|\b26[68]\s*V\b|\b238\s*V\b|\bV26[68]\b|\bV238\b|\bCU7\b|\bU7\b|\b135U\b|\bi[3579]-\d{4,5}'
+    - '\b(8|32|64)\s*GB\b(?!\s*(ssd|flash|ufs|storage|tárhely|speicher))'
+    - '\b(512|1000|2000)\s*(GB|G)\b|\b[12]\s*TB\b|\b1\.0\s*TB\b'
+    - 'surface\s*pro\s*(x|[1-9]|10)\b(?!\d)|\bpro\s*12\b|\b12[\.,]?\d*\s*("|”|zoll|inch|coll|col\b|-inch)'
+    - 'surface\s*laptop|surface\s*go|surface\s*studio|surface\s*book|surface\s*hub'
+    - '\b5G\b|\bLTE\b|\bWWAN\b'
+    - 'keyboard|type\s*cover|billentyűzet|bundle|mit\s+tastatur|\+\s*tastatur|inkl\.?\s*tastatur|slim\s*pen|surface\s*pen|\bstylus\b|\bhülle\b|\bcase\b|\btok\b|\bsleeve\b|\bdock(ing)?\b|\bnetzteil\s+für|\bladegerät\b|\btöltő\b|display(schutz|folie)|\bfolie\b|ersatz|\bakku\b|\bcharger\b'
+    - 'gebraucht|refurbished|generalüberholt|refurb|renewed|b-ware|messeware|\bdemo\b|vorführ|használt|felújított|ex-demo|open\s*box|second\s*hand|\bEP2-\d{5}-B\b|\bmiete\b|mieten|leasing|bérl'
+
+  # Ésszerű ársáv pénznemenként (bruttó, új készülék). Ami kívül esik, az hibás találat
+  # (tartozék, részletfizetési havidíj, más konfiguráció) – a jelentésbe nem kerül be.
+  price_limits:
+    EUR: [900, 2600]
+    CHF: [850, 2500]
+    HUF: [350000, 1100000]
+
+report:
+  countries: [CH, HU, AT, DE]
+  top_n: 3
+  distinct_merchants: true   # egy kereskedő csak egyszer szerepeljen a top 3-ban
+  rank_by: price             # price = termékár | total = ár + szállítás (ahol ismert)
+
+http:
+  user_agent: "Mozilla/5.0 (compatible; SurfacePriceWatch/1.0; personal daily price monitor)"
+  min_delay_seconds: 3
+  timeout_seconds: 30
+  respect_robots: true
+
+# Tartalék árfolyam (1 EUR = ennyi), ha az EKB nem érhető el és nincs mentett árfolyam.
+fallback_fx:
+  CHF: 0.94
+  HUF: 400
+
+# Minden forrás az SKU-specifikus terméklapot kéri le (robots.txt szerint engedélyezett URL-ek),
+# keresőoldalt és kattintás-átirányítást soha. Az ár-összehasonlítók egy lapon adják az összes
+# ott listázott kereskedő árát. Ha egy forrás épp elutasítja a lekérdezést, a jelentés
+# "Források állapota" része jelzi – a többi forrás ettől még működik.
+sources:
+  # ======================= AUSZTRIA + NÉMETORSZÁG =======================
+  # Geizhals.at: a legteljesebb osztrák lista (16 AT + 17 DE kereskedő a platina SKU-ra).
+  # A Cloudflare időnként ellenőrző oldalt ad – olyankor a heise/idealo forrás pótolja.
+  - id: geizhals_at
+    adapter: geizhals
+    enabled: true
+    options:
+      countries: [AT, DE]
+      pages:
+        - url: https://geizhals.at/microsoft-surface-pro-11-ep2-20112-a3408236.html?hloc=at&hloc=de
+          variant: Platin
+          merchant_links:
+            galaxus.at: https://www.galaxus.at/de/s1/product/54161673
+        - url: https://geizhals.at/microsoft-surface-pro-11-ep2-20095-a3408217.html?hloc=at&hloc=de
+          variant: Fekete
+          merchant_links:
+            galaxus.at: https://www.galaxus.at/de/s1/product/54161672
+
+  # heise Preisvergleich: ugyanaz a Geizhals-adatbázis német felülettel (40+ DE kereskedő,
+  # köztük a galaxus.de). Az all_offers=1 nélkül csak az első 30 sor jönne.
+  - id: heise_preisvergleich
+    adapter: geizhals
+    enabled: true
+    options:
+      countries: [AT, DE]
+      pages:
+        - url: https://preisvergleich.heise.de/microsoft-surface-pro-11-ep2-20112-a3408236.html?hloc=at&hloc=de&all_offers=1
+          variant: Platin
+          merchant_links:
+            galaxus.de: https://www.galaxus.de/de/s1/product/54161673
+        - url: https://preisvergleich.heise.de/microsoft-surface-pro-11-ep2-20095-a3408217.html?hloc=at&hloc=de&all_offers=1
+          variant: Fekete
+          merchant_links:
+            galaxus.de: https://www.galaxus.de/de/s1/product/54161672
+
+  # idealo.at: osztrák boltok + Ausztriába szállító német boltok (galaxus.at is).
+  - id: idealo_at
+    adapter: idealo
+    enabled: true
+    options:
+      pages:
+        - url: https://www.idealo.at/preisvergleich/OffersOfProduct/205834888_-surface-pro-11-16gb-256gb-wifi-platin-ep2-20112-microsoft.html
+          country: AT
+          variant: Platin
+          merchant_links:
+            galaxus.at: https://www.galaxus.at/de/s1/product/54161673
+        - url: https://www.idealo.at/preisvergleich/OffersOfProduct/205834898_-surface-pro-11-16gb-256gb-wifi-schwarz-ep2-20095-microsoft.html
+          country: AT
+          variant: Fekete
+          merchant_links:
+            galaxus.at: https://www.galaxus.at/de/s1/product/54161672
+
+  - id: idealo_de
+    adapter: idealo
+    enabled: true
+    options:
+      pages:
+        - url: https://www.idealo.de/preisvergleich/OffersOfProduct/205834888_-surface-pro-11-16gb-256gb-wifi-platin-ep2-20112-microsoft.html
+          country: DE
+          variant: Platin
+          merchant_links:
+            galaxus.de: https://www.galaxus.de/de/s1/product/54161673
+        - url: https://www.idealo.de/preisvergleich/OffersOfProduct/205834898_-surface-pro-11-16gb-256gb-wifi-schwarz-ep2-20095-microsoft.html
+          country: DE
+          variant: Fekete
+          merchant_links:
+            galaxus.de: https://www.galaxus.de/de/s1/product/54161672
+
+  - id: billiger_de
+    adapter: billiger
+    enabled: true
+    options:
+      pages:
+        - url: https://www.billiger.de/products/5185979337-microsoft-surface-pro-11-16-gb-ram-256-gb-ultra-5-236v-platin-fuer-unternehmen
+          variant: Platin
+          merchant_links:
+            galaxus.de: https://www.galaxus.de/de/s1/product/54161673
+        - url: https://www.billiger.de/products/5185988562-microsoft-surface-pro-11-16-gb-ram-256-gb-ultra-5-236v-schwarz-fuer-unternehmen
+          variant: Fekete
+          merchant_links:
+            galaxus.de: https://www.galaxus.de/de/s1/product/54161672
+
+  # hardwareschotte.de: az árak mellett dátum áll; a 3 napnál régebbi árakat eldobjuk.
+  - id: hardwareschotte_de
+    adapter: hardwareschotte
+    enabled: true
+    options:
+      max_age_days: 3
+      pages:
+        - url: https://www.hardwareschotte.de/preisvergleich/Microsoft-Surface-Pro-11-for-Business-16-256GB-platin-EP2-20112-p22305179
+          variant: Platin
+        - url: https://www.hardwareschotte.de/preisvergleich/Microsoft-Surface-Pro-11-for-Business-16-256GB-schwarz-EP2-20095-p22305226
+          variant: Fekete
+
+  # ======================= SVÁJC =======================
+  # Toppreise.ch: itt jelenik meg a Galaxus és a digitec ajánlata is (a galaxus.ch maga
+  # captcha-oldalra irányítja az automatikus lekérdezést, ezért közvetlenül nem kérdezzük).
+  - id: toppreise
+    adapter: toppreise
+    enabled: true
+    options:
+      price: product
+      pages:
+        - url: https://www.toppreise.ch/preisvergleich/Tablets/MICROSOFT-Surface-Pro-11-Edition-for-Business-Copilot-EP2-20112-p797280
+          variant: Platin
+          merchant_links:
+            Galaxus: https://www.galaxus.ch/de/s1/product/54161673
+            digitec: https://www.digitec.ch/de/s1/product/54161673
+        - url: https://www.toppreise.ch/preisvergleich/Tablets/MICROSOFT-Surface-Pro-11-Edition-for-Business-Copilot-EP2-20095-p797281
+          variant: Fekete
+          merchant_links:
+            Galaxus: https://www.galaxus.ch/de/s1/product/54161672
+            digitec: https://www.digitec.ch/de/s1/product/54161672
+
+  # Svájci boltok közvetlenül (schema.org JSON-LD a terméklapon) – tartalék a Toppreise mellé.
+  - id: shops_ch
+    adapter: jsonld
+    enabled: true
+    options:
+      pages:
+        - url: https://www.brack.ch/microsoft-surface-pro-11-business-ultra-5-1817417
+          country: CH
+          merchant: BRACK.CH
+          variant: Platin
+        - url: https://www.brack.ch/microsoft-surface-pro-11-business-ultra-5-1817416
+          country: CH
+          merchant: BRACK.CH
+          variant: Fekete
+        - url: https://techstudio.ch/products/microsoft-surface-pro-11-cu5-16gb-256gb-eu-platin-w11p
+          country: CH
+          merchant: techstudio.ch
+          variant: Platin
+
+  # ======================= MAGYARORSZÁG =======================
+  # Az Árukereső és az ÁrGép Cloudflare-ellenőrzést ad az automatikus lekérdezésre, ezért az
+  # olcsóbbat.hu + a boltok saját terméklapjai adják a magyar árakat.
+  # Magyar SKU-k: EP2-20849 (platina) és EP2-20845 (fekete), "adapter nélkül".
+  - id: olcsobbat
+    adapter: olcsobbat
+    enabled: true
+    options:
+      pages:
+        - url: https://www.olcsobbat.hu/termek/microsoft_surface_pro_copilot_13_ep2_20849_ezust_ep2_20849-67d51313e2e6c08dec0bb48f/
+          variant: Platin
+        - url: https://www.olcsobbat.hu/termek/microsoft_surface_pro_copilot_13_ep2_20845_fekete_ep2_20845-67d5131375db63a6fb0bbc89/
+          variant: Fekete
+
+  - id: shops_hu
+    adapter: jsonld
+    enabled: true
+    options:
+      pages:
+        - url: https://www.notebook.hu/microsoft-surface-pro-11-copilot-pc-ep2-20849-415787
+          country: HU
+          merchant: notebook.hu
+          variant: Platin
+        - url: https://www.bluechip.hu/tablet/microsoft-surface-pro-11-tablet-13-oled-intel-core-ultra-5-236v-16gb-lpddr5x-256gb-ssd-windows-11-pro-platina-550099-p550099.html
+          country: HU
+          merchant: Bluechip
+          variant: Platin
+        - url: https://www.bluechip.hu/tablet/microsoft-surface-pro-11-tablet-13-oled-intel-core-ultra-5-236v-16gb-lpddr5x-256gb-ssd-windows-11-pro-fekete-550098-p550098.html
+          country: HU
+          merchant: Bluechip
+          variant: Fekete
+        - url: https://www.bluechip.hu/tablet/microsoft-surface-pro-11th-u5-256gb-16gb-platinum-w11-pro-509376-p509376.html
+          country: HU
+          merchant: Bluechip
+          variant: "Platin, EU SKU"
+        - url: https://www.bluechip.hu/tablet/microsoft-surface-pro-11-cu5-16gb-256gb-eu-black-w11p-512245-p512245.html
+          country: HU
+          merchant: Bluechip
+          variant: "Fekete, EU SKU"
+        - url: https://www.emag.hu/microsoft-ep2-20112-tablagep-intelr-coretm-ultra-series-2-13-huvelykes-kxg0248693/pd/DRWQF03BM/
+          country: HU
+          merchant: eMAG
+          variant: "Platin, EU SKU"
+
+  # Osztrák bolt közvetlenül – tartalék arra az esetre, ha a Geizhals épp nem elérhető.
+  - id: shops_at
+    adapter: jsonld
+    enabled: true
+    options:
+      pages:
+        - url: https://www.e-tec.at/de/shop/produkt/100223/microsoft-surface-pro-11-platinum-core-ultra-5-236v-/intel-core-ultra-5-236v-4c-4c-8t-2-10-4-70ghz-16gb-ram-256gb-ssd-intel-arc-graphics-130v-igpu-windows-11-pro.html
+          country: AT
+          merchant: e-tec.at
+          variant: Platin
+
+  # ======================= MICROSOFT STORE =======================
+  # Hivatalos katalógus-API. 2026-09-30-án a 16/256-os Intel SKU-t a
+  # DE/AT/CH store nem árulta, magyar eszközbolt nincs – az adapter naponta ellenőrzi, és
+  # jelez, amint a Microsoft felveszi a kínálatba.
+  - id: microsoft_store
+    adapter: msstore
+    enabled: true
+    options:
+      big_id: 8QFMN9XP1RL9
+      markets:
+        - market: DE
+          language: de-de
+          merchant: Microsoft Store DE
+          url: https://www.microsoft.com/de-de/d/surface-pro-for-business-13-zoll-11-edition-intel/8qfmn9xp1rl9
+        - market: AT
+          language: de-at
+          merchant: Microsoft Store AT
+          url: https://www.microsoft.com/de-at/d/surface-pro-for-business-13-zoll-11-edition-intel/8qfmn9xp1rl9
+        - market: CH
+          language: de-ch
+          merchant: Microsoft Store CH
+          url: https://www.microsoft.com/de-ch/d/surface-pro-for-business-13-zoll-11-edition-intel/8qfmn9xp1rl9
