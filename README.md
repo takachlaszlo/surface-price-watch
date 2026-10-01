@@ -61,17 +61,18 @@ Ugyanaz a minta, mint a `hbd-inventory-watcher` projektnél: nincs képfordítá
 kész `python:3.12-slim-bookworm` képből indul, induláskor letölti ezt a repót a GitHub-ról
 (`main` ág), telepíti a függőségeket, majd a napi ütemezőt futtatja.
 
-1. **Container Manager → Projekt → Létrehozás**: név `surface-price-watch`, útvonal
-   `/volume1/docker/surface-price-watch`, forrás: „docker-compose.yml létrehozása”, és
-   illeszd be a [`compose.yaml`](compose.yaml) tartalmát.
+1. Hozd létre a NAS-on a `docker/surface-price-watch` mappát, benne egy üres `data`
+   almappával, és másold bele a [`compose.yaml`](compose.yaml) fájlt.
+   **Container Manager → Projekt → Létrehozás**: név `surface-price-watch`, útvonal
+   `/volume1/docker/surface-price-watch` – a varázsló felismeri a meglévő `compose.yaml`-t.
 2. Az `SMTP_PASSWORD` sorba írd be a `technikai` fiók jelszavát (a repóban csak helykitöltő
    van). A többi beállítás (`RUN_AT`, `MAIL_TO` stb.) ugyanott, az `environment:` alatt van.
 3. **Első próba**: állítsd `RUN_ON_START: "true"`-ra – a konténer indulásakor azonnal lefut
    egy kör és megjön az első levél. Utána állítsd vissza `"false"`-ra (különben minden
    újraindításkor küld levelet).
 4. A konténer naplója (Container Manager → Tároló → surface-price-watch → Napló)
-   forrásonként mutatja, mi történt. Az ártörténet a `pricewatch-data` Docker-kötetben
-   marad meg (`/data/pricewatch.sqlite3`, `/data/last_report.html`, `/data/pricewatch.log`).
+   forrásonként mutatja, mi történt. Az ártörténet a projektmappa `data` almappájában
+   marad meg (`pricewatch.sqlite3`, `last_report.html`, `pricewatch.log`).
 
 **Frissítés / forráslista módosítása**: a `config/config.yaml` (és a program) a GitHub-repóból
 jön, ezért módosítás után elég a változást a `main` ágra feltölteni és a projektet

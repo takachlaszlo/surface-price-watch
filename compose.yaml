@@ -3,8 +3,8 @@
 # programot a GitHub-ról, telepíti a függőségeket, majd a napi ütemezőt futtatja.
 #
 # Container Manager → Projekt → Létrehozás → név: surface-price-watch,
-# útvonal: /volume1/docker/surface-price-watch, forrás: "docker-compose.yml létrehozása",
-# majd ennek a fájlnak a tartalma beillesztve. Az SMTP_PASSWORD értékét kézzel kell beírni.
+# útvonal: /volume1/docker/surface-price-watch (benne ez a compose.yaml és egy üres data mappa).
+# Az SMTP_PASSWORD értékét kézzel kell beírni.
 services:
   surface-price-watch:
     image: python:3.12-slim-bookworm
@@ -36,7 +36,7 @@ services:
       - "mail.home.arpa:192.168.1.168"
 
     volumes:
-      - pricewatch-data:/data   # SQLite ártörténet, napló, utolsó jelentés
+      - ./data:/data   # SQLite ártörténet, napló, utolsó jelentés (a projektmappa data almappája)
 
     command:
       - /bin/sh
@@ -72,6 +72,3 @@ services:
 
         cd /app
         exec python -u -m pricewatch daemon
-
-volumes:
-  pricewatch-data:
