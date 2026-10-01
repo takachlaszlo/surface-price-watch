@@ -97,6 +97,8 @@ def test_shipped_config_is_consistent():
     assert {s.adapter for s in config.sources} <= set(adapters)
     assert len(config.sources) >= 10 and all(s.enabled for s in config.sources)
     for src in config.sources:
+        if src.adapter == "manual":
+            continue  # reads a local file, no URLs
         pages = src.options.get("pages") or src.options.get("markets")
         assert pages and all(p["url"].startswith("https://") for p in pages), src.id
 

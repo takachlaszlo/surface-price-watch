@@ -38,6 +38,22 @@ A program Synology NAS-on, a Container Manager „Projekt” funkciójával fut.
 | AT | `shops_at` – e-tec.at | közvetlen bolti terméklap (tartalék) |
 | DE/AT/CH | `microsoft_store` | hivatalos Microsoft Store katalógus-API (ma nem árulja ezt a konfigurációt) |
 
+### Kézzel rögzített árak (Galaxus, digitec)
+
+A galaxus.ch és a digitec.ch minden automatikus látogatót „Bist du ein Roboter?” ellenőrzésre
+irányít; ezt a program nem kerüli meg. Amíg a Toppreise (amely a Galaxus árát is listázza) nem
+érhető el, a böngészőben megnézett ár a projektmappa `data/kezi_arak.yaml` fájljába írható, és
+7 napig részt vesz a rangsorban („kézi adat, dátum” jelöléssel):
+
+```yaml
+- merchant: Galaxus
+  country: CH
+  price: 1499
+  url: https://www.galaxus.ch/de/s1/product/54161673
+  variant: Platin
+  date: 2026-10-01
+```
+
 **Amit a program nem tud lekérdezni**, mert az oldal bot-védelme elutasítja az automatikus
 klienst: galaxus.ch / digitec.ch közvetlenül (captcha-átirányítás – az áruk a Toppreise-en
 keresztül érkezik), arukereso.hu, argep.hu, alza.hu, mediamarkt, cyberport.at közvetlenül.
