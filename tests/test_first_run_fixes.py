@@ -33,6 +33,8 @@ def test_idealo_marketplace_seller_is_not_booked_as_the_shop_itself():
     offers = load_adapters()["idealo"]("idealo_de", {}, ctx).parse(html, {"url": "u", "country": "DE"})
     assert [(o.merchant, o.price) for o in offers] == [("Amazon Marketplace (cyberport)", 1601.99), ("cyberport.de", 1660.39)]
     assert offers[0].merchant_key == "amazonmarketplace" and offers[1].merchant_key == "cyberport"
+    # rows without carrier badges are still mail-order offers
+    assert offers[0].delivery.lines_hu()[0] == "házhozszállítás: igen"
 
 
 def test_merchant_names_from_different_comparison_sites_collapse():

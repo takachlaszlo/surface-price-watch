@@ -58,6 +58,7 @@ class IdealoSource(Source):
     def _delivery(row, country: str) -> Delivery:
         info = from_carriers([clean(b.get_text(" ")) for b in row.select(
             ".productOffers-listItemOfferDeliveryBlock .productOffers-listItemOfferGreyBadge")])
+        info.home = True  # every idealo offer is a mail-order offer, with or without carrier badges
         logo = row.select_one("a.productOffers-listItemOfferShopV2LogoLink[data-shop-name]")
         raw_name = logo.get("data-shop-name") if logo else ""
         if country == "AT" and re.search(r"\.de\b|\(AT\)", raw_name):
