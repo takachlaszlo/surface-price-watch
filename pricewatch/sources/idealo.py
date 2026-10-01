@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import re
 
+from ..delivery import Delivery, from_carriers
 from ..models import Offer, normalize_merchant
 from ..parse import clean, parse_price, soup
 from . import register
@@ -52,6 +53,17 @@ class IdealoSource(Source):
             self.log.info("%s: %d ajánlat", page["url"], len(found))
             offers.extend(found)
         return offers
+
+    @staticmethod
+    def _delivery(row, country: str) -> Delivery:
+        info = from_carriers([clean(b.get_text(" ")) for b in row.select(
+            ".productOffers-listItemOfferDeliveryBlock .productOffers-listItemOfferGreyBadge")])
+        logo = row.select_one("a.productOffers-listItemOfferShopV2LogoLink[data-shop-name]")
+        raw_name = logo.get("data-shop-name") if logo else ""
+        if country == "AT" and re.search(r"\.de\b|\(AT\)", raw_name):
+            # "easynotebooks.de (AT)": a German shop that ships to Austria – nothing to collect locally
+            info.pickup, info.note = False, "németországi bolt, Ausztriába szállít"
+        return info
 
     def parse(self, html: str, page: dict) -> list[Offer]:
         doc = soup(html)
@@ -88,5 +100,6 @@ class IdealoSource(Source):
                 shipping=shipping,
                 availability=("Lieferung " + clean(delivery.get_text(" ")))[:80] if delivery else None,
                 variant=page.get("variant") or self.matcher.variant_label(product_title, title),
+                delivery=self._delivery(row, page["country"].upper()),
             ))
         return found

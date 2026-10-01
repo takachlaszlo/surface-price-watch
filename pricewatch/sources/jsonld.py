@@ -13,6 +13,7 @@ config.yaml:
 """
 from __future__ import annotations
 
+from ..delivery import Delivery
 from ..http import FetchError
 from ..models import COUNTRIES, Offer
 from ..parse import clean, jsonld_offers, jsonld_products
@@ -76,6 +77,7 @@ class JsonLdSource(Source):
                     url=url,
                     availability=_AVAILABILITY_HU.get((item.get("availability") or "").lower(), item.get("availability")),
                     variant=page.get("variant"),
+                    delivery=Delivery.from_dict(page.get("delivery")),
                 ))
         if not found:
             self.log.info("nincs rendelhető, illeszkedő ajánlat (nincs készleten vagy más termék): %s", url)

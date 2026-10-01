@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import re
 
+from ..delivery import from_hungarian_text
 from ..models import Offer
 from ..parse import clean, parse_price, soup
 from . import register
@@ -74,5 +75,6 @@ class OlcsobbatSource(Source):
                 shipping=0.0 if item.select_one(".availability .freeShipping") else None,
                 availability=_delivery(clean(availability.get_text(" "))) if availability else None,
                 variant=page.get("variant") or self.matcher.variant_label(product_title, title),
+                delivery=from_hungarian_text(clean(availability.get_text(" ")) if availability else ""),
             ))
         return found

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import re
 
+from ..delivery import from_german_text
 from ..models import Offer
 from ..parse import clean, parse_price, soup
 from . import register
@@ -81,5 +82,6 @@ class BilligerSource(Source):
                 shipping=shipping,
                 availability=delivery.group(1).strip()[:80] if delivery else None,
                 variant=page.get("variant") or self.matcher.variant_label(product_title, title),
+                delivery=from_german_text(text),
             ))
         return found

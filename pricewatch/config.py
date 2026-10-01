@@ -8,7 +8,9 @@ from typing import Any
 
 import yaml
 
+from .delivery import Delivery
 from .http import DEFAULT_USER_AGENT
+from .models import normalize_merchant
 
 
 def _env(name: str, default: str = "") -> str:
@@ -94,6 +96,17 @@ class Config:
     data_dir: Path
     mail: MailConfig
     schedule: ScheduleConfig
+    # (country, merchant key) -> what is known about the shop's delivery options
+    merchant_delivery: dict[tuple[str, str], Delivery] = field(default_factory=dict)
+
+
+def _merchant_delivery(entries: list | None) -> dict[tuple[str, str], Delivery]:
+    known: dict[tuple[str, str], Delivery] = {}
+    for entry in entries or []:
+        names = entry.get("merchants") or [entry["merchant"]]
+        for name in names:
+            known[(str(entry["country"]).upper(), normalize_merchant(str(name)))] = Delivery.from_dict(entry)
+    return known
 
 
 def load_config(path: str | os.PathLike | None = None) -> Config:
@@ -142,4 +155,5 @@ def load_config(path: str | os.PathLike | None = None) -> Config:
         data_dir=Path(_env("PRICEWATCH_DATA", "/data")),
         mail=MailConfig.from_env(),
         schedule=ScheduleConfig.from_env(),
+        merchant_delivery=_merchant_delivery(raw.get("merchant_delivery")),
     )

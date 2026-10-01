@@ -38,6 +38,22 @@ A program Synology NAS-on, a Container Manager „Projekt” funkciójával fut.
 | AT | `shops_at` – e-tec.at | közvetlen bolti terméklap (tartalék) |
 | DE/AT/CH | `microsoft_store` | hivatalos Microsoft Store katalógus-API (ma nem árulja ezt a konfigurációt) |
 
+### Átvételi lehetőségek
+
+A top 3 ajánlat alatt az „Átvétel” sor mutatja, hogyan juthatsz a készülékhez:
+
+* **házhozszállítás** – vagy „csak üzletben vehető át” (bolti áras ajánlat);
+* **személyes átvétel** – a bolt saját üzletében/átvevőpontján, a helyszínnel, ha a forrás közli;
+* **csomagpont** – „igen” (a forrás vagy a bolt oldala kimondja, pl. Foxpost, PickMup, PickPoint),
+  „lehetséges” (a bolt olyan futárszolgálattal szállít, amelynek van csomagpont-hálózata –
+  hogy oda kérhető-e, a bolt pénztáránál derül ki), vagy „nincs adat”.
+
+Honnan jön az adat: a Geizhals / heise sorai kiírják a személyes átvételt és azt, ha a bolt csak
+belföldre szállít; az idealo a futárszolgálatokat; az olcsóbbat.hu a szállítási módokat. Ha egy
+bolt több forrásban szerepel, az adatok összeadódnak. Amit a források nem közölnek, azt a
+`config.yaml` `merchant_delivery:` listája pótolja a boltok saját szállítási oldalai alapján
+(forráshivatkozással) – ez bővíthető. „Nincs adat” azt jelenti, hogy egyik forrás sem közli.
+
 ### Kézzel rögzített árak (Galaxus, digitec)
 
 A galaxus.ch és a digitec.ch minden automatikus látogatót „Bist du ein Roboter?” ellenőrzésre

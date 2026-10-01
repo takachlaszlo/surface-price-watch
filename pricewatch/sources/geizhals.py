@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import re
 
+from ..delivery import from_german_text
 from ..models import Offer
 from ..parse import clean, parse_price, soup
 from . import register
@@ -67,6 +68,12 @@ class GeizhalsSource(Source):
             if "offer--unavailable" in classes and not self.options.get("include_unavailable"):
                 continue
             delivery = row.select_one(".offer__delivery-time")
+            payment = row.select_one(".offer__delivery-payment")
+            how = from_german_text(clean(payment.get_text(" ")) if payment else "",
+                                   clean(delivery.get_text(" ")) if delivery else "", silence_means_no=True)
+            if market and market.group(1) == "AT" and flag is not None and (flag.get("alt") or "").upper() == "DE":
+                # "Easynotebooks.de (AT)": a German shop that ships to Austria – nothing to collect locally
+                how.pickup, how.pickup_note, how.note = False, "", "németországi bolt, Ausztriába szállít"
             merchant = re.sub(r"\s*\((AT|DE)\)\s*$", "", merchant_node["data-merchant-name"])
             found.append(self.offer(
                 country=country,
@@ -78,6 +85,7 @@ class GeizhalsSource(Source):
                 shipping=_shipping(row),
                 availability=clean(delivery.get_text(" "))[:80] if delivery else None,
                 variant=page.get("variant") or self.matcher.variant_label(product_title, title),
+                delivery=how,
             ))
         return found
 

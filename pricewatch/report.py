@@ -123,13 +123,21 @@ def build_report(result: RunResult, cfg: Config, storage: Storage) -> tuple[str,
                 f'text-decoration:none;">{escape(offer.merchant)}</a><br>'
                 f'<span style="font-size:12px;">{escape(offer.title[:110])}</span><br>'
                 f'<span style="color:#57606a;font-size:12px;">{" · ".join(extras)}'
-                f'{" · " if extras else ""}forrás: {escape(offer.source)}</span></td></tr>'
+                f'{" · " if extras else ""}forrás: {escape(offer.source)}</span><br>'
+                f'<span style="font-size:12px;"><b>Átvétel:</b> {escape(" · ".join(offer.delivery.lines_hu()))}'
+                f'</span></td></tr>'
             )
             text.append(f"  {rank}. {fmt_money(offer.price, offer.currency)}  {offer.merchant}  [{delta}]")
             text.append(f"     {offer.title[:100]}")
+            text.append(f"     Átvétel: {' · '.join(offer.delivery.lines_hu())}")
             text.append(f"     {offer.url}")
         html.append("</table>")
         text.append("")
+
+    html.append('<div style="color:#57606a;font-size:11px;margin-top:8px;">Átvétel: az ár-összehasonlítók és a boltok '
+                'saját oldalai alapján. „Csomagpont: lehetséges” = a bolt olyan futárszolgálattal szállít, amelynek van '
+                'csomagpont-hálózata; hogy oda kérhető-e a csomag, a bolt pénztáránál derül ki. '
+                '„Nincs adat” = a forrás nem közli.</div>')
 
     # ---- cross-country comparison + trend
     html.append('<h3 style="margin:22px 0 6px 0;border-bottom:2px solid #d0d7de;padding-bottom:4px;">'

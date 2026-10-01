@@ -59,6 +59,70 @@ fallback_fx:
 # keresőoldalt és kattintás-átirányítást soha. Az ár-összehasonlítók egy lapon adják az összes
 # ott listázott kereskedő árát. Ha egy forrás épp elutasítja a lekérdezést, a jelentés
 # "Források állapota" része jelzi – a többi forrás ettől még működik.
+# Amit a boltok átvételi lehetőségeiről a saját oldaluk alapján tudunk (ellenőrizve: 2026-10-01).
+# A források (Geizhals/heise, idealo, olcsóbbat) által közölt adatokat ez egészíti ki ott,
+# ahol a forrás hallgat. pickup = személyes átvétel a bolt saját üzletében/átvevőpontján,
+# parcel = csomagpont / csomagautomata (yes | no | possible).
+merchant_delivery:
+  - merchant: BRACK.CH
+    country: CH
+    home: true
+    pickup: true
+    pickup_note: "Mägenwil, Willisau"
+    parcel: "yes"
+    parcel_note: "PickMup (Migros), PickPost, My Post 24"
+    # forrás: https://www.brack.ch/versand
+  - merchants: [Galaxus, digitec]
+    country: CH
+    home: true
+    pickup: true
+    pickup_note: "digitec/Galaxus üzletek: Zürich, Bern, Basel, Dietikon, St. Gallen, Kriens, Genf, Lausanne, Winterthur, Wohlen"
+    parcel: "yes"
+    parcel_note: "PickMup (Migros)"
+    # forrás: https://www.digitec.ch/de/page/abholen-zurueckgeben-beraten-lassen-was-du-in-unseren-shops-alles-machen-kannst-43497
+  - merchant: techstudio.ch
+    country: CH
+    home: true
+    pickup: false
+    note: "csak Svájcba és Liechtensteinbe szállít (Swiss Post)"
+    # forrás: https://techstudio.ch/pages/faq
+  - merchant: Bluechip
+    country: HU
+    home: true
+    pickup: true
+    pickup_note: "Bluechip Szaküzlet"
+    parcel: "yes"
+    parcel_note: "GLS CsomagPont, GLS csomagautomata"
+    # forrás: https://www.bluechip.hu/-hSZALLMODOK.html
+  - merchant: notebook.hu
+    country: HU
+    home: true
+    pickup: true
+    pickup_note: "Budapest Oktogon, Budaörs, Győr, Szeged"
+    parcel: "yes"
+    parcel_note: "Foxpost, GLS csomagautomata, MPL PostaPont / csomagautomata"
+    # forrás: https://www.notebook.hu/atveteli-lehetosegek
+  - merchant: eMAG
+    country: HU
+    home: true
+    pickup: true
+    pickup_note: "eMAG átvételi pontok"
+    parcel: "yes"
+    parcel_note: "easybox, Posta Pont"
+    note: "Marketplace-eladó termékénél eltérhet"
+    # forrás: https://www.emag.hu/help/szallitasi-informaciok/
+  - merchant: cyberport.at
+    country: AT
+    home: true
+    pickup: true
+    pickup_note: "Wien: BahnhofCity Wien West, Citygate"
+    # forrás: https://www.cyberport.at/service/versand-und-servicekosten/selbstabholung.html
+  - merchant: galaxus.at
+    country: AT
+    home: true
+    pickup: false
+    # forrás: https://www.galaxus.at/de/guide/28 (nincs saját átvevőpont; DHL -> Österreichische Post)
+
 sources:
   # ======================= AUSZTRIA + NÉMETORSZÁG =======================
   # Geizhals.at: a legteljesebb osztrák lista (16 AT + 17 DE kereskedő a platina SKU-ra).

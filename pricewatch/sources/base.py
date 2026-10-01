@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
+from ..delivery import Delivery
 from ..http import HttpClient
 from ..matcher import Matcher
 from ..models import Offer, normalize_merchant
@@ -47,8 +48,9 @@ class Source(ABC):
 
     def offer(self, *, country: str, merchant: str, title: str, price: float, currency: str,
               url: str, shipping: float | None = None, availability: str | None = None,
-              variant: str | None = None) -> Offer:
+              variant: str | None = None, delivery: Delivery | None = None) -> Offer:
         return Offer(
+            delivery=delivery or Delivery(),
             source=self.id,
             country=country.upper(),
             merchant=merchant.strip(),

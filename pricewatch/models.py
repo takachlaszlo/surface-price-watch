@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from .delivery import Delivery
+
 # code -> (Hungarian name, flag, local currency)
 COUNTRIES: dict[str, tuple[str, str, str]] = {
     "CH": ("Svájc", "🇨🇭", "CHF"),
@@ -52,6 +54,7 @@ class Offer:
     availability: str | None = None
     variant: str = ""
     price_eur: float | None = None  # filled in by the runner
+    delivery: Delivery = field(default_factory=Delivery)
 
     @property
     def merchant_key(self) -> str:
