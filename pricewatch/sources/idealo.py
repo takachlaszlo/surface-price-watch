@@ -18,10 +18,28 @@ from __future__ import annotations
 
 import re
 
-from ..models import Offer
+from ..models import Offer, normalize_merchant
 from ..parse import clean, parse_price, soup
 from . import register
 from .base import Source
+
+
+def _shop_name(node) -> str:
+    name = clean(node.get("data-shop-name")) if node else ""
+    name = re.sub(r"\s+-\s+Shop aus .*$", "", name)
+    return re.sub(r"\s*\(?\b(AT|DE)\)?\s*$", "", name).strip()
+
+
+def _merchant(row) -> str:
+    """The logo names the shop; on marketplace rows the button names the seller instead.
+
+    "Amazon Marketplace" + seller "cyberport" must not be booked as Cyberport's own offer.
+    """
+    shop = _shop_name(row.select_one("a.productOffers-listItemOfferShopV2LogoLink[data-shop-name]"))
+    seller = _shop_name(row.select_one("a.productOffers-listItemOfferCtaLeadout[data-shop-name]"))
+    if shop and seller and normalize_merchant(shop) != normalize_merchant(seller):
+        return f"{shop} ({seller})"
+    return shop or seller or _shop_name(row.select_one("[data-shop-name]"))
 
 
 @register("idealo")
@@ -49,11 +67,7 @@ class IdealoSource(Source):
             price = parse_price(clean(price_node.get_text(" "))) if price_node else None
             if price is None:
                 continue
-            shop = row.select_one("a.productOffers-listItemOfferCtaLeadout[data-shop-name]") \
-                or row.select_one("[data-shop-name]")
-            merchant = clean(shop.get("data-shop-name")) if shop else ""
-            merchant = re.sub(r"\s+-\s+Shop aus .*$", "", merchant)
-            merchant = re.sub(r"\s*\(?\b(AT|DE)\)?\s*$", "", merchant).strip()
+            merchant = _merchant(row)
             if not merchant:
                 continue
             title_node = row.select_one(".productOffers-listItemTitleInner")

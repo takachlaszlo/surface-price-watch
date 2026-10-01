@@ -41,7 +41,9 @@ def select_top(offers: list[Offer], cfg: Config) -> dict[str, list[Offer]]:
     top: dict[str, list[Offer]] = {}
     for country in cfg.countries:
         ranked = sorted((o for o in offers if o.country == country),
-                        key=lambda o: (rank_value(o, cfg.rank_by), o.merchant_key))
+                        key=lambda o: (rank_value(o, cfg.rank_by),
+                                       o.shipping if o.shipping is not None else float("inf"),
+                                       o.merchant_key))  # equal price: cheaper known shipping first
         chosen: list[Offer] = []
         seen: set[str] = set()
         for offer in ranked:
@@ -143,7 +145,7 @@ def build_report(result: RunResult, cfg: Config, storage: Storage) -> tuple[str,
         low30 = min((p for _, p in history), default=None)
         all_low = storage.all_time_low(country)
         today = fmt_money(best.price, best.currency) if best else "–"
-        eur = fmt_money(best.price_eur, "EUR") if best and best.price_eur else "–"
+        eur = fmt_money(best.price_eur, "EUR") if best and best.price_eur and best.currency != "EUR" else "–"
         if best and country in prev_min:
             delta, colour = _delta(best.price, prev_min[country], best.currency)
         else:
@@ -156,7 +158,7 @@ def build_report(result: RunResult, cfg: Config, storage: Storage) -> tuple[str,
             f'<td>{fmt_money(low30, currency) if low30 else "–"}</td><td>{low_text}</td>'
             f'<td style="font-family:monospace;letter-spacing:1px;">{sparkline([p for _, p in history])}</td></tr>'
         )
-        text.append(f"  {name}: ma {today} (≈ {eur}), előző naphoz: {delta}"
+        text.append(f"  {name}: ma {today}" + (f" (≈ {eur})" if eur != "–" else "") + f", előző naphoz: {delta}"
                     + (f", eddigi min.: {fmt_money(all_low[0], currency)} ({all_low[1]})" if all_low else ""))
     html.append("</table>")
     html.append(f'<div style="color:#57606a;font-size:11px;margin-top:4px;">Átváltás: {escape(result.fx_note)}. '

@@ -78,6 +78,6 @@ class JsonLdSource(Source):
                     variant=page.get("variant"),
                 ))
         if not found:
-            self.log.info("no matching JSON-LD offer on %s", url)
+            self.log.info("nincs rendelhető, illeszkedő ajánlat (nincs készleten vagy más termék): %s", url)
         # one page describes one product: keep its cheapest offer
         return sorted(found, key=lambda o: o.price)[:1]

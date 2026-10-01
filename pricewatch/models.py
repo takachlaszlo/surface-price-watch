@@ -16,12 +16,27 @@ _LEGAL_FORMS = re.compile(r"\b(gmbh|ag|kft\.?|zrt\.?|e\.k\.|kg|shop|online\s*sho
 _HOST_NOISE = re.compile(r"^(https?://)?(www\.)?|\.(ch|de|at|hu|com|net|eu|shop)(/.*)?$", re.IGNORECASE)
 
 
+_TRANSLIT = str.maketrans({"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss", "Ä": "ae", "Ö": "oe", "Ü": "ue"})
+# the same shop under the names different comparison sites use for it
+_ALIASES = {
+    "jacobelektronik": "jacob",
+    "arltcomputer": "arlt",
+    "xitra24": "xitra",
+    "cnwitsysteme": "cnw",
+    "computernetworks": "cnw",
+    "amazonmarket": "amazonmarketplace",
+}
+
+
 def normalize_merchant(name: str) -> str:
     """'www.Galaxus.ch', 'Galaxus' and 'galaxus.ch' must collapse to one key;
-    so must 'BRACK.CH AG' / 'Brack' and 'Jacob Elektronik direkt' / 'Jacob Elektronik'."""
-    cleaned = _LEGAL_FORMS.sub(" ", name).strip(" -")
+    so must 'BRACK.CH AG' / 'Brack', 'büroshop24' / 'bueroshop24.de' and
+    'Amazon Marketplace (seller)' / 'Amazon Marketplace'."""
+    cleaned = re.sub(r"\([^)]*\)", " ", name).translate(_TRANSLIT)
+    cleaned = _LEGAL_FORMS.sub(" ", cleaned).strip(" -")
     cleaned = _HOST_NOISE.sub("", cleaned)
-    return re.sub(r"[^a-z0-9]+", "", cleaned.lower()) or name.strip().lower()
+    key = re.sub(r"[^a-z0-9]+", "", cleaned.lower()) or name.strip().lower()
+    return _ALIASES.get(key, key)
 
 
 @dataclass

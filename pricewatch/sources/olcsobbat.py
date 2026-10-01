@@ -15,10 +15,18 @@ config.yaml:
 """
 from __future__ import annotations
 
+import re
+
 from ..models import Offer
 from ..parse import clean, parse_price, soup
 from . import register
 from .base import Source
+
+
+def _delivery(text: str) -> str:
+    """'Ingyenes szállítás , 4 nap alatt Személyes átvét, Futár … Kártya' -> the delivery part only."""
+    head = re.split(r"\s+(?=Személyes|Futár|PickPack|Foxpost|Kártya|Utalás|Utánvét|Készpénz)", text)[0]
+    return re.sub(r"\s+,", ",", head)[:80]
 
 
 @register("olcsobbat")
@@ -64,7 +72,7 @@ class OlcsobbatSource(Source):
                 currency="HUF",
                 url=page["url"],
                 shipping=0.0 if item.select_one(".availability .freeShipping") else None,
-                availability=clean(availability.get_text(" "))[:80] if availability else None,
+                availability=_delivery(clean(availability.get_text(" "))) if availability else None,
                 variant=page.get("variant") or self.matcher.variant_label(product_title, title),
             ))
         return found

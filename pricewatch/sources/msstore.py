@@ -32,7 +32,7 @@ class MicrosoftStoreSource(Source):
             url = f"{API}?bigIds={big_id}&market={market['market']}&languages={market['language']},neutral"
             doc = self.http.get_json(url, headers={"Accept": "application/json"})
             found = self.parse(doc, market)
-            self.log.info("%s: %d ajánlat", market["market"], len(found))
+            self.log.info("Microsoft Store %s: %d ajánlat a figyelt cikkszámokra", market["market"], len(found))
             offers.extend(found)
         return offers
 
