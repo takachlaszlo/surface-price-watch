@@ -28,6 +28,7 @@ from pathlib import Path
 import yaml
 
 from ..delivery import Delivery
+from ..financing import Financing
 from ..http import FetchError
 from ..models import COUNTRIES, Offer
 from ..parse import parse_price
@@ -78,5 +79,6 @@ class ManualSource(Source):
                 availability=f"kézi adat, {seen.isoformat()}",
                 variant=str(entry.get("variant") or ""),
                 delivery=Delivery.from_dict(entry.get("delivery")),
+                financing=Financing.from_dict(entry.get("financing")),
             ))
         return offers

@@ -14,6 +14,7 @@ config.yaml:
 from __future__ import annotations
 
 from ..delivery import Delivery
+from ..financing import Financing, from_page
 from ..http import FetchError
 from ..models import COUNTRIES, Offer
 from ..parse import clean, jsonld_offers, jsonld_products
@@ -58,6 +59,8 @@ class JsonLdSource(Source):
         country = page["country"].upper()
         html = self.http.get_text(url)
         found: list[Offer] = []
+        # Hungarian shops print their instalment plans (THM) on the product page
+        financing = from_page(html) if country == "HU" else Financing()
         for product in jsonld_products(html):
             name = clean(str(product.get("name") or ""))
             ids = " ".join(str(product[k]) for k in _ID_FIELDS if isinstance(product.get(k), (str, int)))
@@ -78,6 +81,7 @@ class JsonLdSource(Source):
                     availability=_AVAILABILITY_HU.get((item.get("availability") or "").lower(), item.get("availability")),
                     variant=page.get("variant"),
                     delivery=Delivery.from_dict(page.get("delivery")),
+                    financing=financing,
                 ))
         if not found:
             self.log.info("nincs rendelhető, illeszkedő ajánlat (nincs készleten vagy más termék): %s", url)

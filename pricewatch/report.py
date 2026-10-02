@@ -125,19 +125,39 @@ def build_report(result: RunResult, cfg: Config, storage: Storage) -> tuple[str,
                 f'<span style="color:#57606a;font-size:12px;">{" · ".join(extras)}'
                 f'{" · " if extras else ""}forrás: {escape(offer.source)}</span><br>'
                 f'<span style="font-size:12px;"><b>Átvétel:</b> {escape(" · ".join(offer.delivery.lines_hu()))}'
-                f'</span></td></tr>'
+                f'</span>{_financing_html(offer, country)}</td></tr>'
             )
             text.append(f"  {rank}. {fmt_money(offer.price, offer.currency)}  {offer.merchant}  [{delta}]")
             text.append(f"     {offer.title[:100]}")
             text.append(f"     Átvétel: {' · '.join(offer.delivery.lines_hu())}")
+            if country == "HU" or offer.financing.known():
+                text.append(f"     Részletfizetés: {offer.financing.line_hu()}")
             text.append(f"     {offer.url}")
         html.append("</table>")
+        if country == "HU":
+            best_zero = min((o for o in result.offers if o.country == "HU" and o.financing.thm0 == "yes"),
+                            key=lambda o: o.price, default=None)
+            if best_zero is None:
+                note = "Ma egyik magyar ajánlatnál sem találtam erre a termékre kimondott 0% THM-es konstrukciót."
+                html.append(f'<div style="font-size:12px;margin-top:6px;color:#9a6700;">{note}</div>')
+            else:
+                note = (f"Legolcsóbb 0% THM-es magyar ajánlat: {best_zero.merchant} – "
+                        f"{fmt_money(best_zero.price, best_zero.currency)} ({best_zero.financing.terms})")
+                html.append(f'<div style="font-size:13px;margin-top:6px;background:#dafbe1;padding:6px 8px;'
+                            f'border-radius:6px;"><b>Legolcsóbb 0% THM-es magyar ajánlat:</b> '
+                            f'<a href="{escape(best_zero.url, quote=True)}" style="color:#0969da;">'
+                            f'{escape(best_zero.merchant)}</a> – {fmt_money(best_zero.price, best_zero.currency)} '
+                            f'({escape(best_zero.financing.terms)})</div>')
+            text.append("  " + note.replace(" ", " "))
         text.append("")
 
     html.append('<div style="color:#57606a;font-size:11px;margin-top:8px;">Átvétel: az ár-összehasonlítók és a boltok '
                 'saját oldalai alapján. „Csomagpont: lehetséges” = a bolt olyan futárszolgálattal szállít, amelynek van '
                 'csomagpont-hálózata; hogy oda kérhető-e a csomag, a bolt pénztáránál derül ki. '
-                '„Nincs adat” = a forrás nem közli.</div>')
+                '„Nincs adat” = a forrás nem közli.<br>Részletfizetés (magyar boltok): „igen” = a bolt erre a termékre, '
+                'illetve erre a kosárértékre 0% THM-es konstrukciót hirdet (hitelbírálat után); „lehetséges” = a bolt '
+                'csak megjelölt termékekre ad 0% THM-et, a terméklapon kell ellenőrizni; „nincs” = a bolt tájékoztatója '
+                'szerint csak kamatos konstrukció érhető el.</div>')
 
     # ---- cross-country comparison + trend
     html.append('<h3 style="margin:22px 0 6px 0;border-bottom:2px solid #d0d7de;padding-bottom:4px;">'
@@ -193,6 +213,15 @@ def build_report(result: RunResult, cfg: Config, storage: Storage) -> tuple[str,
                 'automatikus napi jelentés a NAS-ról.</div></div></body></html>')
 
     return subject, "\n".join(html), "\n".join(text).replace(" ", " ")
+
+
+def _financing_html(offer: Offer, country: str) -> str:
+    """Instalment line – always shown for Hungarian offers, elsewhere only when something is known."""
+    if country != "HU" and not offer.financing.known():
+        return ""
+    colour = {"yes": "#1a7f37", "no": "#57606a"}.get(offer.financing.thm0, "#1f2328")
+    return (f'<br><span style="font-size:12px;color:{colour};"><b>Részletfizetés:</b> '
+            f'{escape(offer.financing.line_hu())}</span>')
 
 
 def _shipping(offer: Offer) -> str:

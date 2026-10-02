@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..delivery import Delivery
+from ..financing import Financing
 from ..http import HttpClient
 from ..matcher import Matcher
 from ..models import Offer, normalize_merchant
@@ -48,9 +49,11 @@ class Source(ABC):
 
     def offer(self, *, country: str, merchant: str, title: str, price: float, currency: str,
               url: str, shipping: float | None = None, availability: str | None = None,
-              variant: str | None = None, delivery: Delivery | None = None) -> Offer:
+              variant: str | None = None, delivery: Delivery | None = None,
+              financing: Financing | None = None) -> Offer:
         return Offer(
             delivery=delivery or Delivery(),
+            financing=financing or Financing(),
             source=self.id,
             country=country.upper(),
             merchant=merchant.strip(),

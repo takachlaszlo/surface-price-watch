@@ -10,6 +10,7 @@ from .config import Config
 from .http import BlockedError, FetchError, HttpClient, RobotsDisallowed
 from .mailer import send_with_retry
 from .delivery import Delivery
+from .financing import Financing, for_price
 from .matcher import Matcher
 from .models import COUNTRIES, Offer, RunResult, SourceResult
 from .report import build_report
@@ -73,7 +74,8 @@ def _validate(found: list[Offer], cfg: Config) -> tuple[list[Offer], int]:
     return kept, len(found) - len(kept)
 
 
-def dedupe(offers: list[Offer], known: dict[tuple[str, str], Delivery] | None = None) -> list[Offer]:
+def dedupe(offers: list[Offer], known: dict[tuple[str, str], Delivery] | None = None,
+           financing_rules: dict[tuple[str, str], dict] | None = None) -> list[Offer]:
     """The same merchant shows up through several comparison sites: keep its best price,
     and pool what the sites (and the curated `merchant_delivery` list) say about delivery."""
     best: dict[tuple[str, str, str], Offer] = {}
@@ -83,7 +85,11 @@ def dedupe(offers: list[Offer], known: dict[tuple[str, str], Delivery] | None = 
         delivery[merchant] = delivery[merchant].merge(offer.delivery) if merchant in delivery else offer.delivery
         current = best.get(offer.dedup_key)
         if current is None or offer.price < current.price:
+            if current is not None and not offer.financing.known():
+                offer.financing = current.financing  # the dearer listing of the same offer knew more
             best[offer.dedup_key] = offer
+        elif not current.financing.known():
+            current.financing = offer.financing
     for (country, key), info in list(delivery.items()):
         base = (country, key.split("stores")[0])
         if "stores" in key and info.pickup and base in delivery:  # "Cyberport Stores Österreich" -> Cyberport
@@ -93,6 +99,10 @@ def dedupe(offers: list[Offer], known: dict[tuple[str, str], Delivery] | None = 
         offer.delivery = delivery[merchant]
         if known and merchant in known:
             offer.delivery = offer.delivery.merge(known[merchant])
+        if financing_rules and merchant in financing_rules and not offer.financing.thm0:
+            # the shop-wide rule only speaks where the product page itself said nothing
+            rule = for_price(financing_rules[merchant], offer.price)
+            offer.financing = Financing(rule.thm0, rule.terms, offer.financing.other or rule.other)
     return list(best.values())
 
 
@@ -108,7 +118,7 @@ def run_once(cfg: Config, *, send_mail: bool = True, only: set[str] | None = Non
         raw_offers, source_results = collect(cfg, http, only)
         for offer in raw_offers:
             offer.price_eur = fx.to_eur(offer.price, offer.currency, rates)
-        offers = dedupe(raw_offers, cfg.merchant_delivery)
+        offers = dedupe(raw_offers, cfg.merchant_delivery, cfg.merchant_financing)
         storage.finish_run(run_id, datetime.now(), offers, source_results)
 
         result = RunResult(run_id=run_id, run_date=now.date().isoformat(), offers=offers,

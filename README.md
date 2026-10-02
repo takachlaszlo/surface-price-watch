@@ -54,6 +54,22 @@ bolt több forrásban szerepel, az adatok összeadódnak. Amit a források nem k
 `config.yaml` `merchant_delivery:` listája pótolja a boltok saját szállítási oldalai alapján
 (forráshivatkozással) – ez bővíthető. „Nincs adat” azt jelenti, hogy egyik forrás sem közli.
 
+### 0% THM részletfizetés (magyar boltok)
+
+A magyar ajánlatok alatt a „Részletfizetés” sor mutatja, vehető-e a készülék 0% THM-mel:
+
+* **igen** – a bolt terméklapja erre a termékre kiír egy 0% THM-es konstrukciót (pl. notebook.hu:
+  „4 × 151 580 Ft + 151 580 Ft önerő”), vagy a bolt szabálya erre a kosárértékre érvényes
+  (pl. iPon MilPay: 4 egyenlő részlet 100 000 – 1 000 000 Ft között). Mindig hitelbírálat után.
+* **lehetséges** – a bolt csak megjelölt termékekre ad 0% THM-et (pl. eMAG), a terméklapon kell
+  megnézni;
+* **nincs** – a bolt tájékoztatója vagy a terméklap szerint csak kamatos konstrukció érhető el;
+* **nincs adat** – sem a terméklap, sem a `merchant_financing:` lista nem mond róla semmit.
+
+A terméklapról kiolvasott konstrukció mindig erősebb, mint a `config.yaml` `merchant_financing:`
+listájában rögzített bolti szabály (forráshivatkozással, bővíthető). A magyar blokk alján külön
+sor emeli ki a legolcsóbb 0% THM-es ajánlatot, akkor is, ha az nem fér be a top 3-ba.
+
 ### Kézzel rögzített árak (Galaxus, digitec)
 
 A galaxus.ch és a digitec.ch minden automatikus látogatót „Bist du ein Roboter?” ellenőrzésre

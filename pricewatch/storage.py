@@ -62,6 +62,8 @@ class Storage:
         columns = {row["name"] for row in self.db.execute("PRAGMA table_info(offers)")}
         if "delivery" not in columns:  # databases created before delivery options were tracked
             self.db.execute("ALTER TABLE offers ADD COLUMN delivery TEXT")
+        if "financing" not in columns:
+            self.db.execute("ALTER TABLE offers ADD COLUMN financing TEXT")
         self.db.commit()
 
     def close(self) -> None:
@@ -80,11 +82,12 @@ class Storage:
         run_date = self.db.execute("SELECT run_date FROM runs WHERE id = ?", (run_id,)).fetchone()["run_date"]
         self.db.executemany(
             "INSERT INTO offers (run_id, run_date, source, country, merchant, merchant_key, title, variant,"
-            " price, currency, price_eur, shipping, availability, url, delivery)"
-            " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            " price, currency, price_eur, shipping, availability, url, delivery, financing)"
+            " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             [
                 (run_id, run_date, o.source, o.country, o.merchant, o.merchant_key, o.title, o.variant,
-                 o.price, o.currency, o.price_eur, o.shipping, o.availability, o.url, o.delivery.to_json())
+                 o.price, o.currency, o.price_eur, o.shipping, o.availability, o.url, o.delivery.to_json(),
+                 o.financing.to_json())
                 for o in offers
             ],
         )

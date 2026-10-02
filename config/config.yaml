@@ -123,6 +123,36 @@ merchant_delivery:
     pickup: false
     # forrás: https://www.galaxus.at/de/guide/28 (nincs saját átvevőpont; DHL -> Österreichische Post)
 
+# Magyar boltok részletfizetési szabályai a saját tájékoztatójuk alapján (ellenőrizve: 2026-10-02).
+# A terméklapon kiírt konkrét konstrukció (pl. notebook.hu) mindig felülírja ezt; a lista ott
+# szól, ahol a terméklap hallgat. thm0: yes | possible | no; min_price / max_price = kosárérték-
+# határ forintban; instalments = egyenlő részletek száma (a program kiszámolja az összeget).
+merchant_financing:
+  - merchant: iPon
+    country: HU
+    thm0: "yes"
+    terms: "MilPay: az első részlet (25%) rendeléskor, a többi 30/60/90 nap múlva, keretbírálat után"
+    instalments: 4
+    min_price: 100000
+    max_price: 1000000
+    other: "Klarna és OTP Webshop Hitel is választható (THM a pénztárnál)"
+    # forrás: https://ipon.hu/promo/milpay, https://ipon.hu/fizetesi-modok
+  - merchant: notebook.hu
+    country: HU
+    thm0: "possible"
+    terms: "Bankmentes részletfizetés (Instacash) 100 000 – 800 000 Ft között, nem minden termékre"
+    # forrás: https://www.notebook.hu/reszletfizetes-instacash (a terméklap kiírja, ha a termékre érvényes)
+  - merchant: eMAG
+    country: HU
+    thm0: "possible"
+    terms: "Cofidis 4 havi 0% THM csak a megjelölt (Marketplace-)termékekre, 25 000 Ft felett – a terméklapon ellenőrizendő"
+    # forrás: https://www.emag.hu/lps/ecredit-aruhitel
+  - merchant: Bluechip
+    country: HU
+    thm0: "no"
+    terms: "a bolt tájékoztatója szerint Cofidis Express áruhitel, referencia THM 19,90% (9–48 hó)"
+    # forrás: https://www.bluechip.hu/cofidis-express-aruhitel-hCOFIDIS.html
+
 sources:
   # ======================= AUSZTRIA + NÉMETORSZÁG =======================
   # Geizhals.at: a legteljesebb osztrák lista (16 AT + 17 DE kereskedő a platina SKU-ra).

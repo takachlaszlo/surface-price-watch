@@ -98,6 +98,8 @@ class Config:
     schedule: ScheduleConfig
     # (country, merchant key) -> what is known about the shop's delivery options
     merchant_delivery: dict[tuple[str, str], Delivery] = field(default_factory=dict)
+    # (country, merchant key) -> the shop's instalment rule (thm0 / terms / other / min_price / max_price)
+    merchant_financing: dict[tuple[str, str], dict] = field(default_factory=dict)
 
 
 def _merchant_delivery(entries: list | None) -> dict[tuple[str, str], Delivery]:
@@ -106,6 +108,14 @@ def _merchant_delivery(entries: list | None) -> dict[tuple[str, str], Delivery]:
         names = entry.get("merchants") or [entry["merchant"]]
         for name in names:
             known[(str(entry["country"]).upper(), normalize_merchant(str(name)))] = Delivery.from_dict(entry)
+    return known
+
+
+def _merchant_financing(entries: list | None) -> dict[tuple[str, str], dict]:
+    known: dict[tuple[str, str], dict] = {}
+    for entry in entries or []:
+        for name in entry.get("merchants") or [entry["merchant"]]:
+            known[(str(entry["country"]).upper(), normalize_merchant(str(name)))] = dict(entry)
     return known
 
 
@@ -156,4 +166,5 @@ def load_config(path: str | os.PathLike | None = None) -> Config:
         mail=MailConfig.from_env(),
         schedule=ScheduleConfig.from_env(),
         merchant_delivery=_merchant_delivery(raw.get("merchant_delivery")),
+        merchant_financing=_merchant_financing(raw.get("merchant_financing")),
     )

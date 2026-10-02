@@ -5,6 +5,7 @@ import re
 from dataclasses import dataclass, field
 
 from .delivery import Delivery
+from .financing import Financing
 
 # code -> (Hungarian name, flag, local currency)
 COUNTRIES: dict[str, tuple[str, str, str]] = {
@@ -55,6 +56,7 @@ class Offer:
     variant: str = ""
     price_eur: float | None = None  # filled in by the runner
     delivery: Delivery = field(default_factory=Delivery)
+    financing: Financing = field(default_factory=Financing)
 
     @property
     def merchant_key(self) -> str:

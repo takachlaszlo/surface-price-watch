@@ -19,7 +19,12 @@ ECB = b"""<?xml version="1.0"?><gesmes:Envelope xmlns:gesmes="http://www.gesmes.
 SHOP_PAGE = """<html><head><script type="application/ld+json">
 {"@type":"Product","name":"Microsoft Surface Pro 11 - Copilot+ PC (EP2-20849) Platinum","mpn":"EP2-20849",
  "offers":{"@type":"Offer","price":"757900","priceCurrency":"HUF","availability":"https://schema.org/InStock"}}
-</script></head></html>"""
+</script></head><body>
+<div class="loan-box"><div class="title">Otp Online áruhitel</div><div class="desc">
+ <span class="loan-details">22 399 FT x 48 HÓ</span> <span class="loan-details"><span>THM: 19.9%</span> | Önrész: 0 FT</span></div></div>
+<div class="loan-box instacash-calc"><div class="title">Bankmentes részletfizetés</div><div class="desc">
+ <span class="loan-details bigger">151 580 FT x 4 HÓ</span> <span class="loan-details"><span>THM: 0%</span> | Önerő: 151 580 FT</span></div></div>
+</body></html>"""
 
 
 class Reply:
@@ -140,6 +145,16 @@ def test_full_run_builds_report_and_sends_mail(cfg, monkeypatch):
     assert best["CH"].price_eur == round(1515.0 / 0.94, 2)
     # Easynotebooks is listed by heise and hardwareschotte: one merchant after de-duplication
     assert sum(1 for o in result.offers if o.country == "DE" and o.merchant_key == "easynotebooks") == 1
+
+    by_merchant = {o.merchant: o for o in result.offers if o.country == "HU"}
+    assert by_merchant["notebook.hu"].financing.line_hu() == (
+        "0% THM: igen – 4 × 151 580 Ft + 151 580 Ft önerő (Bankmentes részletfizetés)"
+        " · további: Otp Online áruhitel 48 hó, THM 19,9%")
+    assert by_merchant["iPon"].financing.thm0 == "yes"  # MilPay rule: 705 490 Ft is inside 100 000 – 1 000 000 Ft
+    assert by_merchant["iPon"].financing.terms.startswith("4 × 176 372 Ft – MilPay")
+    text = (cfg.data_dir / "last_report.txt").read_text(encoding="utf-8")
+    assert "Legolcsóbb 0% THM-es magyar ajánlat: iPon – 705 490 Ft" in text
+    assert "Részletfizetés:" not in text.split("== Ausztria")[1]  # only shown where something is known
 
     html = (cfg.data_dir / "last_report.html").read_text(encoding="utf-8")
     for needle in ("Svájc", "Magyarország", "Ausztria", "Németország", "Galaxus", "iPon",
